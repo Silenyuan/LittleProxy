@@ -20,13 +20,16 @@ import java.net.Socket;
 import java.util.concurrent.TimeUnit;
 
 import static org.hamcrest.Matchers.lessThan;
-import static org.hamcrest.Matchers.startsWith;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
 
 public class TimeoutTest {
+
+    private static final String UNUSED_URI_FOR_BAD_GATEWAY = "http://1.2.3.6:53540";
+
     private ClientAndServer mockServer;
     private int mockServerPort;
 
@@ -94,7 +97,7 @@ public class TimeoutTest {
         final HttpHost proxy = new HttpHost("127.0.0.1", proxyServer.getListenAddress().getPort(), "http");
         httpClient.getParams().setParameter(ConnRoutePNames.DEFAULT_PROXY, proxy);
 
-        HttpGet get = new HttpGet("http://1.2.3.4:53540");
+        HttpGet get = new HttpGet(UNUSED_URI_FOR_BAD_GATEWAY);
 
         long start = System.nanoTime();
         HttpResponse response = httpClient.execute(get);
@@ -129,9 +132,7 @@ public class TimeoutTest {
         // wait a bit to allow the proxy server to respond
         Thread.sleep(1500);
 
-        // the proxy should return an HTTP 504 due to the timeout
-        String response = SocketClientUtil.readStringFromSocket(socket);
-        assertThat("Expected to receive an HTTP 504 Gateway Timeout from the server", response, startsWith("HTTP/1.1 504"));
+        assertFalse("Client to proxy connection should be closed", SocketClientUtil.isSocketReadyToRead(socket));
 
         socket.close();
     }

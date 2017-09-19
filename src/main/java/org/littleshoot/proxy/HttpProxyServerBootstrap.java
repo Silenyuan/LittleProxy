@@ -93,11 +93,17 @@ public interface HttpProxyServerBootstrap {
     /**
      * <p>
      * Specify an {@link SslEngineSource} to use for encrypting inbound
-     * connections.
+     * connections. Enabling this will enable SSL client authentication
+     * by default (see {@link #withAuthenticateSslClients(boolean)})
      * </p>
      * 
      * <p>
      * Default = null
+     * </p>
+     * 
+     * <p>
+     * Note - This and {@link #withManInTheMiddle(MitmManager)} are
+     * mutually exclusive.
      * </p>
      * 
      * @param sslEngineSource
@@ -148,11 +154,6 @@ public interface HttpProxyServerBootstrap {
      * Default = null
      * </p>
      * 
-     * <p>
-     * Note - This and {@link #withManInTheMiddle(MitmManager)} are currently
-     * mutually exclusive.
-     * </p>
-     * 
      * @param chainProxyManager
      * @return
      */
@@ -170,8 +171,8 @@ public interface HttpProxyServerBootstrap {
      * </p>
      * 
      * <p>
-     * Note - This and {@link #withChainProxyManager(ChainedProxyManager)} are
-     * currently mutually exclusive.
+     * Note - This and {@link #withSslEngineSource(SslEngineSource)} are
+     * mutually exclusive.
      * </p>
      * 
      * @param mitmManager
@@ -262,7 +263,7 @@ public interface HttpProxyServerBootstrap {
     /**
      * Specify a custom {@link HostResolver} for resolving server addresses.
      * 
-     * @param resolver
+     * @param serverResolver
      * @return
      */
     HttpProxyServerBootstrap withServerResolver(HostResolver serverResolver);
@@ -293,6 +294,22 @@ public interface HttpProxyServerBootstrap {
      * @param inetSocketAddress to be used for outgoing communication
      */
     HttpProxyServerBootstrap withNetworkInterface(InetSocketAddress inetSocketAddress);
+    
+    HttpProxyServerBootstrap withMaxInitialLineLength(int maxInitialLineLength);
+    
+    HttpProxyServerBootstrap withMaxHeaderSize(int maxHeaderSize);
+    
+    HttpProxyServerBootstrap withMaxChunkSize(int maxChunkSize);
+
+    /**
+     * When true, the proxy will accept requests that appear to be directed at an origin server (i.e. the URI in the HTTP
+     * request will contain an origin-form, rather than an absolute-form, as specified in RFC 7230, section 5.3).
+     * This is useful when the proxy is acting as a gateway/reverse proxy. <b>Note:</b> This feature should not be
+     * enabled when running as a forward proxy; doing so may cause an infinite loop if the client requests the URI of the proxy.
+     *
+     * @param allowRequestToOriginServer when true, the proxy will accept origin-form HTTP requests
+     */
+    HttpProxyServerBootstrap withAllowRequestToOriginServer(boolean allowRequestToOriginServer);
 
     /**
      * Sets the alias to use when adding Via headers to incoming and outgoing HTTP messages. The alias may be any
